@@ -43,6 +43,11 @@ README. Live at https://jwillc.github.io/chimera-kiln/; a push to `main` rebuild
 | `yard.ts`, `game.ts`, the card | `bun run dev`, then `bun run check [url] [outdir] [solid]`, and look at the screenshots |
 | the card, the readouts, the buttons, CSS | `bun run check:phone [url] [outdir]`: a touch screen, upright and sideways, using the buttons |
 
+The trailer: `bun tools/kiln-trailer.ts out/trailer` films takes in phone layout frame by frame
+(a scripted player on the real buttons) and logs every sound; `uv run tools/kiln-trailer-cut.py
+out/trailer` rebuilds the sound and cuts the film. Its opening is someone else's clip
+(`out/trailer/source.mp4`): that and the finished film stay in `out/`, which is not committed.
+
 `bun run check` plays three tyres in headless Chromium with real audio. Nobody can hear the sounds
 or feel the controls from a headless run: say so when reporting.
 

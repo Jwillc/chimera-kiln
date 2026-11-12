@@ -40,11 +40,18 @@ function useTouch(): boolean {
  */
 function Pad(props: { game: Game; phase: Phase }) {
   const { game, phase } = props;
+  // which buttons are down: a finger hides its own button, so the button lights for as long as it is held
+  const [down, setDown] = useState<Record<string, boolean>>({});
+  const set = (code: string, on: boolean) => {
+    game.key(code, on);
+    setDown((d) => (!!d[code] === on ? d : { ...d, [code]: on }));
+  };
   // a button held is a key held: it lets go when the finger lifts, slides off or is taken by the system
   const held = (code: string, glyph: string, label: string) => (
     <button
       key={code}
       aria-label={label}
+      className={down[code] ? "held" : undefined}
       onPointerDown={(e) => {
         // keep the finger's later moves coming here even if it slides off (some pointers cannot be captured)
         try {
@@ -52,16 +59,23 @@ function Pad(props: { game: Game; phase: Phase }) {
         } catch {
           // it is still held until it lifts
         }
-        game.key(code, true);
+        set(code, true);
       }}
-      onPointerUp={() => game.key(code, false)}
-      onPointerCancel={() => game.key(code, false)}
-      onLostPointerCapture={() => game.key(code, false)}
+      onPointerUp={() => set(code, false)}
+      onPointerCancel={() => set(code, false)}
+      onLostPointerCapture={() => set(code, false)}
       onContextMenu={(e) => e.preventDefault()}
     >
       {glyph}
     </button>
   );
+  // the buttons change with the phase: nothing stays held across the change
+  useEffect(() => {
+    setDown((d) => {
+      for (const code of Object.keys(d)) if (d[code]) game.key(code, false);
+      return {};
+    });
+  }, [game, phase]);
   const group = (name: string, row: boolean, ...buttons: React.ReactNode[]) => (
     <div className={row ? "kiln-pad-group row" : "kiln-pad-group"}>
       <div className="kiln-pad-buttons">{buttons}</div>
@@ -79,7 +93,14 @@ function Pad(props: { game: Game; phase: Phase }) {
         </button>
       )}
       {spin && (
-        <button className="kiln-pad-knock" onPointerDown={() => game.tap("Space")} onContextMenu={(e) => e.preventDefault()}>
+        <button
+          className={down.Space ? "kiln-pad-knock held" : "kiln-pad-knock"}
+          onPointerDown={() => {
+            game.tap("Space");
+            setDown((d) => ({ ...d, Space: true }));
+          }}
+          onContextMenu={(e) => e.preventDefault()}
+        >
           Knock
         </button>
       )}

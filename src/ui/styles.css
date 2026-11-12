@@ -2864,8 +2864,13 @@ input[type="range"]::-moz-range-thumb {
   line-height: 1;
   -webkit-tap-highlight-color: transparent;
 }
-.kiln-pad button:active {
-  background: rgba(79, 182, 242, 0.45);
+.kiln-pad button:active,
+.kiln-pad button.held {
+  background: rgba(79, 182, 242, 0.5);
+  border-color: var(--white);
+}
+.kiln-pad button.kiln-pad-knock.held {
+  background: rgba(255, 179, 64, 0.55);
 }
 .kiln-pad button.kiln-pad-knock,
 .kiln-pad button.kiln-pad-next {
