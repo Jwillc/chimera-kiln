@@ -11,6 +11,7 @@
     "test": "bun test tests",
     "typecheck": "tsc --noEmit",
     "check": "bun tools/kiln-check.ts",
+    "check:phone": "bun tools/kiln-phone.ts",
     "wasm": "cargo build -p chimera-wasm --release --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/release/chimera_wasm.wasm src/wasm/chimera.wasm"
   },
   "dependencies": {

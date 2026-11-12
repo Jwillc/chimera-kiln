@@ -42,6 +42,8 @@ export interface Scene {
 }
 
 const M = 100;
+/** how much taller than its wide-screen self the view may grow on an upright screen */
+const TALL = 1.75;
 const cm = (p: V3): V3 => [p[0] * M, p[1] * M, p[2] * M];
 const scale = (a: V3, s: number): V3 => [a[0] * s, a[1] * s, a[2] * s];
 const clamp01 = (u: number) => Math.max(0, Math.min(1, u));
@@ -518,7 +520,10 @@ export class Yard {
 
     // ---- the camera
     const cam = r.camera;
-    const fov = (2 * Math.atan(Math.tan((sc.fov * Math.PI) / 360) * Math.max(1, 1.45 / cam.aspect)) * 180) / Math.PI;
+    // The field of view is given for a wide screen. A squarer one sees as far to each side by
+    // seeing more above and below; a phone held upright gets some of that, not all of it, or
+    // everything in the yard would be small: like the clip, it loses the men at the edges instead.
+    const fov = (2 * Math.atan(Math.tan((sc.fov * Math.PI) / 360) * Math.max(1, Math.min(1.45 / cam.aspect, TALL))) * 180) / Math.PI;
     if (Math.abs(cam.fov - fov) > 1e-3 || cam.far < 100000) {
       cam.fov = fov;
       cam.near = 8;

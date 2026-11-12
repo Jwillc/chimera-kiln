@@ -2797,6 +2797,110 @@ input[type="range"]::-moz-range-thumb {
   /* the solid room behind it is brighter than the wire one */
   background: rgba(0, 0, 0, 0.94);
 }
+/* the kiln game fills the screen and is not a page to scroll, pinch or pull */
+.kiln {
+  width: 100vw;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* the yard fills it at any size (on a narrow screen the synth's own head view goes square) */
+.kiln .anatomy {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  aspect-ratio: auto;
+}
+.kiln .anatomy canvas {
+  cursor: default;
+}
+/* its buttons, on a touch screen: under the thumbs, clear of the notch and the home bar */
+.kiln-pad {
+  z-index: 1;
+  align-self: end;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px max(14px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  pointer-events: none;
+}
+.kiln-pad-group {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+.kiln-pad-group span {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--white);
+  text-shadow: 0 0 4px #000, 0 0 4px #000;
+}
+.kiln-pad-buttons {
+  display: grid;
+  gap: 10px;
+}
+.kiln-pad-group.row .kiln-pad-buttons {
+  grid-auto-flow: column;
+}
+.kiln-pad button {
+  pointer-events: auto;
+  touch-action: none;
+  width: 68px;
+  height: 68px;
+  padding: 0;
+  border: 1.5px solid var(--blue);
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--white);
+  font: inherit;
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.kiln-pad button:active {
+  background: rgba(79, 182, 242, 0.45);
+}
+.kiln-pad button.kiln-pad-knock,
+.kiln-pad button.kiln-pad-next {
+  width: auto;
+  min-width: 124px;
+  height: 78px;
+  padding: 0 18px;
+  border-color: var(--amber);
+  font-size: 18px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.kiln-pad button.kiln-pad-next {
+  height: 68px;
+  min-width: 0;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  align-self: flex-end;
+}
+/* a phone on its side has little height: smaller buttons, side by side */
+@media (max-height: 460px) {
+  .kiln-pad button {
+    width: 58px;
+    height: 58px;
+  }
+  .kiln-pad-buttons {
+    grid-auto-flow: column;
+  }
+  .kiln-pad button.kiln-pad-knock {
+    height: 58px;
+  }
+  .kiln-pad button.kiln-pad-next {
+    height: 58px;
+  }
+}
 /* the kiln game's card: what to do and which keys do it, in type that can be read over the yard */
 .fps-card.kiln-card {
   width: min(700px, calc(100vw - 24px));
@@ -2865,6 +2969,42 @@ input[type="range"]::-moz-range-thumb {
   font-size: 15px;
   line-height: 1.4;
   color: var(--blue);
+}
+.fps-card.kiln-card {
+  touch-action: pan-y;
+}
+@media (max-width: 600px), (max-height: 560px) {
+  .fps-card.kiln-card {
+    gap: 10px;
+    padding: 16px 16px;
+  }
+  .fps-card.kiln-card h1 {
+    font-size: 26px;
+  }
+  .fps-card.kiln-card .lead {
+    font-size: 16px;
+  }
+  /* start is in reach without scrolling: it goes above the controls */
+  .kiln-card button.primary {
+    order: 1;
+  }
+  .kiln-steps,
+  .kiln-also {
+    order: 2;
+  }
+  .kiln-card .hint {
+    order: 3;
+  }
+  .kiln-steps {
+    gap: 8px;
+  }
+  .kiln-steps section {
+    gap: 7px;
+    padding: 10px 12px;
+  }
+  .kiln-key {
+    font-size: 15px;
+  }
 }
 .kiln-also {
   display: flex;

@@ -20,6 +20,9 @@ ladder and the air are simulated, and every sound in it is a synthesized voice.
 | | `R` | Start this tyre over |
 | | `G` | Switch between solid and wireframe |
 
+On a phone or tablet the same controls are buttons on the screen, and it plays upright or on its
+side.
+
 A tyre needs about 50 m/s of tread speed to reach the chimney's mouth, and it starts to smoke and
 lose grip if it is held at full speed. The ladder stays where you leave it between tyres; about
 75° is a good place to start.
@@ -55,6 +58,7 @@ bun run dev        # http://127.0.0.1:5327
 bun run test       # the physics tests
 bun run build      # the site, in dist/
 bun run check      # plays three tyres in headless Chromium against the dev server
+bun run check:phone  # the same on a phone-sized touch screen, with the on-screen buttons
 ```
 
 Pushing to `main` builds and publishes the site to GitHub Pages

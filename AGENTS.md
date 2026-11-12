@@ -28,6 +28,9 @@ README. Live at https://jwillc.github.io/chimera-kiln/; a push to `main` rebuild
 - **Solid graphics by default.** `G` switches to wireframe and back; the option is not shown on
   the title card.
 - **Every sound is a CHIMERA voice.** No recordings of engines, tyres or people.
+- **It plays on a phone**, upright or on its side. On a touch screen the keys are buttons under
+  the thumbs (`Pad` in `KilnPage.tsx`), the yard fills the screen, and the readouts wrap. Anything
+  added to the screen has to fit 390 px wide and leave the bottom corners to the buttons.
 - From behind, anything drawn along the tyre's path is end-on and invisible: show speed with
   things that spread sideways or upward.
 
@@ -38,6 +41,7 @@ README. Live at https://jwillc.github.io/chimera-kiln/; a push to `main` rebuild
 | anything | `bun run build` (wasm, typecheck, bundle) and `bun run test` |
 | `physics.ts` | read what the tests pin (spin needed, the lean window) before moving a number |
 | `yard.ts`, `game.ts`, the card | `bun run dev`, then `bun run check [url] [outdir] [solid]`, and look at the screenshots |
+| the card, the readouts, the buttons, CSS | `bun run check:phone [url] [outdir]`: a touch screen, upright and sideways, using the buttons |
 
 `bun run check` plays three tyres in headless Chromium with real audio. Nobody can hear the sounds
 or feel the controls from a headless run: say so when reporting.

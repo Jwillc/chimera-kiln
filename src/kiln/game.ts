@@ -6,6 +6,7 @@
  * The player is two men in turn. At the engine: the lever (W and S), and when the man with the
  * pole knocks the tyre off the shaft (Space).
  * Once the tyre is rolling: the ladder, a step to either side (A and D) and its lean (W and S).
+ * On a phone the same keys are buttons on the screen (`key` and `tap`).
  * It is all seen from one place, behind the engine, as the clip it comes from was filmed.
  * What the tyre then does is `physics.ts`; this file is the hands, the camera and the ears.
  *
@@ -15,7 +16,7 @@
  */
 import { getModel } from "../ui/useModel.ts";
 import { NEUTRAL } from "../wasm/engine.ts";
-import { label, labelWidth, ring } from "../ui/render/vector.ts";
+import { blockLineH, label, labelBlock, labelWidth, ring, wrapLabel } from "../ui/render/vector.ts";
 import { V } from "../ui/colors.ts";
 import type { HeadFeed } from "../ui/components/AnatomyView3D.tsx";
 import type { OverlayFn } from "../ui/components/AnatomyView.tsx";
@@ -69,6 +70,8 @@ export class Game {
   sim = new Sim((Date.now() ^ (Math.random() * 2 ** 31)) >>> 0);
   tries = 0;
   wins = 0;
+  /** played by touch: the keys are buttons on the screen, so the readouts leave them room and say nothing of a keyboard */
+  touch = false;
   private t = 0;
   private last = 0;
   private readonly keys = new Set<string>();
@@ -205,6 +208,17 @@ export class Game {
     });
     on("keyup", (e) => this.keys.delete(e.code));
     on("visibilitychange", () => this.keys.clear());
+  }
+
+  /** a key held down or let go by something other than the keyboard (a button on the screen) */
+  key(code: string, on: boolean) {
+    if (on) this.keys.add(code);
+    else this.keys.delete(code);
+  }
+
+  /** a key struck once by something other than the keyboard */
+  tap(code: string) {
+    this.press(code);
   }
 
   private press(code: string) {
@@ -420,7 +434,10 @@ export class Game {
       this.since = this.t;
       this.emit();
     }
-    if (this.phase === "roll" && sim.phase === "air") this.phase = "fly";
+    if (this.phase === "roll" && sim.phase === "air") {
+      this.phase = "fly";
+      this.emit();
+    }
     if (sim.outcome && this.phase !== "after") {
       const o = (this.result = sim.outcome), won = o.kind === "in";
       this.phase = "after";
@@ -512,7 +529,10 @@ export class Game {
   private hud(ctx: CanvasRenderingContext2D, w: number, h: number) {
     if (this.phase === "menu") return;
     const sim = this.sim, t = this.t;
-    const size = Math.max(10, Math.min(14, w / 80)), lh = size * 1.75, x0 = size * 1.6;
+    // a narrow screen (a phone held upright): one column of readouts, and text that wraps
+    const narrow = w < 560;
+    const size = Math.max(narrow ? 11 : 10, Math.min(14, w / 80)), lh = size * 1.75, x0 = narrow ? size * 1.1 : size * 1.6;
+    const wideRows = Math.min(size * 31, w - 2 * x0 + size * 1.6), valueAt = narrow ? size * 11 : size * 14;
     const plate = (x: number, y: number, wide: number, tall: number, alpha = 0.72) => {
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -539,15 +559,16 @@ export class Game {
     const wind = Math.hypot(sim.wind[0], sim.wind[2]);
     const across = sim.wind[2], alongW = sim.wind[0];
     rows.push(["wind", `${wind.toFixed(1)} m/s ${Math.abs(across) > Math.abs(alongW) ? (across > 0 ? "to the right" : "to the left") : alongW > 0 ? "behind it" : "against it"}`, wind > 1.4 ? V.amber : V.blueMid]);
-    plate(x0 - size * 0.8, size * 0.7, size * 31, rows.length * lh + size * 0.9);
+    if (narrow) rows.push(["tyre", `${this.tries}   in the chimney ${this.wins}`, this.wins ? V.green : V.blueMid]);
+    plate(x0 - size * 0.8, size * 0.7, wideRows, rows.length * lh + size * 0.9);
     rows.forEach(([name, value, color], i) => {
       label(ctx, name.toUpperCase(), x0, size * 2.2 + i * lh, { size, color: V.blueMid, ls: 0.12 });
-      label(ctx, value.toUpperCase(), x0 + size * 14, size * 2.2 + i * lh, { size, color, weight: "m", ls: 0.1 });
+      label(ctx, value.toUpperCase(), x0 + valueAt, size * 2.2 + i * lh, { size, color, weight: "m", ls: 0.1 });
     });
     // the lever, as a bar
     if (this.phase === "spin") {
-      const y = size * 2.2 + rows.length * lh + size * 0.6, wide = size * 28;
-      plate(x0 - size * 0.8, y - size * 0.9, size * 31, size * 2.2);
+      const y = size * 2.2 + rows.length * lh + size * 0.6, wide = wideRows - size * 3;
+      plate(x0 - size * 0.8, y - size * 0.9, wideRows, size * 2.2);
       ctx.save();
       ctx.strokeStyle = V.blueMid;
       ctx.strokeRect(x0, y - size * 0.3, wide, size * 0.9);
@@ -562,34 +583,43 @@ export class Game {
       if (p) ring(ctx, p[0], p[1], size * 1.5, sim.burning ? V.amber : V.white, 1, { alpha: 0.7 });
     }
 
-    // ---- the count, top right
-    label(ctx, `TYRE ${this.tries}`, w - x0, size * 2.2, { size, color: V.blueMid, ls: 0.12, align: "right" });
-    label(ctx, `IN THE CHIMNEY  ${this.wins}`, w - x0, size * 2.2 + lh, { size, color: this.wins ? V.green : V.blueMid, weight: "m", ls: 0.12, align: "right" });
-
-    // ---- how it ended
-    const o = this.result;
-    if (this.phase === "after" && o && t - this.doneAt > 0.5) {
-      const [head, sub] = verdict(o), big = Math.max(18, Math.min(40, w / 26)), alpha = Math.min(1, (t - this.doneAt - 0.5) / 0.3);
-      const wide = Math.max(labelWidth(ctx, head.toUpperCase(), { size: big, weight: "m", ls: 0.1 }), labelWidth(ctx, sub.toUpperCase(), { size, ls: 0.1 }));
-      plate((w - wide) / 2 - big, h * 0.24 - big * 1.5, wide + 2 * big, big * 1.9 + (sub ? lh * 1.3 : 0), 0.72 * alpha);
-      label(ctx, head.toUpperCase(), w / 2, h * 0.24, { size: big, color: o.kind === "in" ? V.green : o.kind === "rim" ? V.amber : V.white, weight: "m", ls: 0.1, align: "center", alpha });
-      if (sub) label(ctx, sub.toUpperCase(), w / 2, h * 0.24 + lh * 1.3, { size, color: V.white, ls: 0.1, align: "center", alpha: alpha * 0.85 });
+    // ---- the count, top right (on a narrow screen it is a row of the readouts)
+    if (!narrow) {
+      label(ctx, `TYRE ${this.tries}`, w - x0, size * 2.2, { size, color: V.blueMid, ls: 0.12, align: "right" });
+      label(ctx, `IN THE CHIMNEY  ${this.wins}`, w - x0, size * 2.2 + lh, { size, color: this.wins ? V.green : V.blueMid, weight: "m", ls: 0.12, align: "right" });
     }
 
-    // ---- what someone just shouted
+    // ---- how it ended: a line, and under it the numbers, wrapped to the screen
+    const o = this.result, room = Math.min(w - 2 * size * 2.2, 760);
+    if (this.phase === "after" && o && t - this.doneAt > 0.5) {
+      const [head, sub] = verdict(o), alpha = Math.min(1, (t - this.doneAt - 0.5) / 0.3);
+      let big = Math.max(18, Math.min(40, w / 26));
+      const headOpt = () => ({ size: big, weight: "m", ls: 0.1 }) as const;
+      while (big > 13 && labelWidth(ctx, head.toUpperCase(), headOpt()) > room) big -= 1;
+      const subOpt = { size, ls: 0.1 } as const, lines = sub ? wrapLabel(ctx, sub.toUpperCase(), room, subOpt) : [];
+      const wide = Math.max(labelWidth(ctx, head.toUpperCase(), headOpt()), ...lines.map((l) => labelWidth(ctx, l, subOpt)));
+      const top = h * (narrow ? 0.3 : 0.24), under = lines.length * blockLineH(size);
+      plate((w - wide) / 2 - size * 1.6, top - big * 1.5, wide + size * 3.2, big * 2 + (lines.length ? under + size * 0.6 : 0), 0.72 * alpha);
+      label(ctx, head.toUpperCase(), w / 2, top, { ...headOpt(), color: o.kind === "in" ? V.green : o.kind === "rim" ? V.amber : V.white, align: "center", alpha });
+      if (lines.length) labelBlock(ctx, sub.toUpperCase(), w / 2, top + size * 1.1 + under / 2, room, { ...subOpt, color: V.white, align: "center", alpha: alpha * 0.85 });
+    }
+
+    // ---- what someone just shouted: over the buttons, when there are buttons
     const cap = this.caption;
     if (cap && t < cap.until) {
       const cs = Math.max(13, Math.min(22, w / 46)), alpha = Math.min(1, (cap.until - t) / 0.3), text = cap.text.toUpperCase();
-      const wide = labelWidth(ctx, text, { size: cs, weight: "m", ls: 0.06 });
-      plate((w - wide) / 2 - cs, h - cs * 5.2, wide + 2 * cs, cs * 1.9, 0.72 * alpha);
-      label(ctx, text, w / 2, h - cs * 3.95, { size: cs, color: V.white, weight: "m", ls: 0.06, align: "center", alpha });
+      const opt = { size: cs, weight: "m", ls: 0.06 } as const, lines = wrapLabel(ctx, text, room, opt);
+      const wide = Math.max(...lines.map((l) => labelWidth(ctx, l, opt))), tall = lines.length * blockLineH(cs);
+      const mid = h - cs * 3.6 - tall / 2 - (this.touch ? Math.min(150, h * 0.22) : 0);
+      plate((w - wide) / 2 - cs, mid - tall / 2 - cs * 0.5, wide + 2 * cs, tall + cs * 0.9, 0.72 * alpha);
+      labelBlock(ctx, text, w / 2, mid, room, { ...opt, color: V.white, align: "center", alpha });
     }
 
     // ---- what the player can do from here
     const tips = this.phase === "spin" ? ["W  S   the lever", "space   knock it off the shaft"]
       : this.phase === "roll" ? ["A  D   step the ladder across", "W  S   stand it up, lean it back"]
       : this.phase === "after" ? ["space   another tyre", "W  S  A  D   set the ladder for it"] : [];
-    if (tips.length) {
+    if (tips.length && !this.touch) {
       const opt = { size, ls: 0.12, weight: "m" } as const;
       const wide = Math.max(...tips.map((s) => labelWidth(ctx, s.toUpperCase(), opt)));
       const y0 = h - size * 1.6 - (tips.length - 1) * lh;
