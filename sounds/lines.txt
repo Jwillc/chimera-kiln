@@ -1,0 +1,15 @@
+# The men's shouts in the kiln game: who.slot: what he says.
+# who is one of: holder (he has the tyre, by the engine), driver (he has the lever),
+# ladder (he has the ladder, far off), all (the three of them at once, cheering).
+# Reword freely, keep the slot names; then `uv run compose.py`.
+
+holder.ready:   Ready? Open it up!
+driver.more:    More! Give it more!
+driver.smoke:   It's smoking!
+driver.burn:    It's on fire! Let it go!
+holder.go:      Go!
+ladder.mine:    I've got it!
+ladder.again:   Again! Send another!
+holder.inside:  It's in! It's in!
+holder.close:   So close!
+all.day:        This is the greatest day of our entire lives!

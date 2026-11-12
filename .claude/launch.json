@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kiln-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5327
+    },
+    {
+      "name": "kiln-pages-preview",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["BASE_PATH=/chimera-kiln/", "bunx", "vite", "preview", "--host", "127.0.0.1"],
+      "port": 5328
+    }
+  ]
+}

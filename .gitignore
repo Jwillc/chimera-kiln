@@ -1,0 +1,7 @@
+node_modules
+dist
+out
+target/
+.DS_Store
+# built from crates/ by `bun run wasm`
+src/wasm/chimera.wasm
